@@ -5,6 +5,9 @@ A full-stack production-ready web app to discover, compare, and save colleges ac
 **Tech Stack:** Next.js 14 · React · TypeScript · Tailwind CSS · PostgreSQL · Prisma ORM · NextAuth.js
 
 ---
+## Live Demo
+
+https://college-discovery-platform-liard.vercel.app/
 
 ## 📁 Project Structure
 
@@ -53,7 +56,15 @@ college-discovery/
 │       └── index.ts                          # TypeScript interfaces
 └── .env.example                              # Environment variable template
 ```
+## Architecture
 
+Frontend (Next.js + React)
+        ↓
+API Routes (Next.js App Router)
+        ↓
+Prisma ORM
+        ↓
+PostgreSQL (Neon)
 ---
 
 ## 🚀 Getting Started
@@ -110,7 +121,7 @@ Open [http://localhost:3000](http://localhost:3000) 🎉
 2. Go to [vercel.com](https://vercel.com) → Import project
 3. Add environment variables in Vercel dashboard:
    - `DATABASE_URL` (use Neon's **pooled** connection string)
-   - `NEXTAUTH_SECRET`
+   -  `NEXTAUTH_SECRET`=your-random-secret-key
    - `NEXTAUTH_URL` = your Vercel URL (e.g. `https://college-discover.vercel.app`)
 4. Deploy!
 
