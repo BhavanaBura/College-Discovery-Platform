@@ -3,7 +3,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LoadingSpinner, ErrorMessage } from "@/components/ui/index";
@@ -24,7 +24,7 @@ interface CompareCollege {
   _count: { reviews: number };
 }
 
-export default function ComparePage() {
+function CompareContent() {
   const searchParams = useSearchParams();
   const idsParam = searchParams.get("ids");
 
@@ -153,5 +153,12 @@ export default function ComparePage() {
         </div>
       )}
     </div>
+  );
+}
+export default function ComparePage() {
+  return (
+    <Suspense fallback={<LoadingSpinner text="Loading comparison..." />}>
+      <CompareContent />
+    </Suspense>
   );
 }
