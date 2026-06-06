@@ -1,0 +1,136 @@
+// prisma/schema.prisma
+// This file defines the database structure (tables & relationships)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── USER ───────────────────────────────────────────────────────────────────
+model User {
+  id            String         @id @default(cuid())
+  name          String?
+  email         String         @unique
+  password      String?        // hashed with bcrypt; null if OAuth login
+  image         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  // NextAuth tables
+  accounts      Account[]
+  sessions      Session[]
+
+  // App-level relations
+  reviews       Review[]
+  savedColleges SavedCollege[]
+}
+
+// ─── NEXTAUTH TABLES (required by @auth/prisma-adapter) ─────────────────────
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── COLLEGE ────────────────────────────────────────────────────────────────
+model College {
+  id              String   @id @default(cuid())
+  name            String
+  location        String   // e.g. "Hyderabad, Telangana"
+  state           String   // e.g. "Telangana"
+  type            String   // "Government" | "Private" | "Deemed"
+  established     Int      // year e.g. 1960
+  totalFees       Float    // annual fees in INR
+  rating          Float    // 0-5
+  imageUrl        String?
+  description     String   @db.Text
+  website         String?
+  accreditation   String?  // "NAAC A+", "NBA", etc.
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Placement stats stored as simple fields (easy to understand)
+  avgPackage      Float?   // in LPA (lakhs per annum)
+  highestPackage  Float?
+  placementRate   Float?   // percentage e.g. 92.5
+
+  courses         Course[]
+  reviews         Review[]
+  savedBy         SavedCollege[]
+}
+
+// ─── COURSE ─────────────────────────────────────────────────────────────────
+model Course {
+  id         String  @id @default(cuid())
+  name       String  // e.g. "B.Tech Computer Science"
+  duration   Int     // years e.g. 4
+  fees       Float   // annual fees
+  seats      Int
+  collegeId  String
+
+  college    College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+}
+
+// ─── REVIEW ─────────────────────────────────────────────────────────────────
+model Review {
+  id         String   @id @default(cuid())
+  rating     Float    // 1-5
+  comment    String   @db.Text
+  createdAt  DateTime @default(now())
+
+  userId     String
+  collegeId  String
+
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college    College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId]) // one review per user per college
+}
+
+// ─── SAVED COLLEGE ───────────────────────────────────────────────────────────
+model SavedCollege {
+  id        String   @id @default(cuid())
+  savedAt   DateTime @default(now())
+
+  userId    String
+  collegeId String
+
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId]) // can't save same college twice
+}
